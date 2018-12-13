@@ -1,0 +1,85 @@
+#!/usr/bin/env php
+<?php
+
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+require_once dirname(__DIR__).'/vendor/autoload.php';
+
+static $input;
+
+function getInput()
+{
+    global $input;
+
+    return $input;
+}
+
+try {
+    (new Application('Advent Of Code', '0.1.0'))
+        ->register('run')
+        ->addArgument('day', InputArgument::OPTIONAL, 'The day to run')
+        ->setCode(function (InputInterface $input, OutputInterface $output) {
+
+            /** @var \Symfony\Component\Console\Output\ConsoleSectionOutput $progress */
+            $progress = $output->section();
+            /** @var \Symfony\Component\Console\Output\ConsoleSectionOutput $resultSection */
+            $resultSection = $output->section();
+
+            $path = dirname(__DIR__).'/src';
+            $dirs = new DirectoryIterator($path);
+            $days = [];
+
+            /** @var DirectoryIterator $dir */
+            foreach ($dirs as $dir) {
+                if ($dir->isDot()) {
+                    continue;
+                }
+                $days[$dir->getFilename()] = true;
+                uksort($days, function ($a, $b) {
+                    return substr($a, 3) <=> substr($b, 3);
+                });
+            }
+
+            $selectedDay = $input->getArgument('day');
+
+            if ($selectedDay) {
+                if ($days[$selectedDay] ?? false) {
+                    $days = [$input->getArgument('day') => true];
+                } else {
+                    throw new \InvalidArgumentException("Day $selectedDay does not exist. Available days: ".implode(', ', array_keys($days)));
+                }
+            }
+
+            foreach (array_keys($days) as $day) {
+
+                $progress->overwrite("<comment>Running $day</comment>\n");
+
+                $input = file_get_contents("$path/$day/input.txt");
+
+                $result = (function ($path, $day) use ($input) {
+                    return require("$path/$day/part1.php");
+                })($path, $day);
+
+                $resultSection->writeln("<info>Result: ($day / Part 1)</info>: $result");
+
+                if (file_exists("$path/$day/part2.php")) {
+                    $result = (function ($path, $day) use ($input) {
+                        return require("$path/$day/part2.php");
+                    })($path, $day);
+
+                    $resultSection->writeln("<info>Result: ($day / Part 2)</info>: $result");
+                    $resultSection->writeln("");
+                }
+            }
+
+            $progress->clear();
+            $resultSection->clear(1);
+        })
+        ->getApplication()
+        ->setDefaultCommand('run', true)
+        ->run();
+} catch (Exception $e) {
+}

@@ -1,6 +1,6 @@
 <?php
 
-$input = explode("\n", file_get_contents('input.txt'));
+$input = explode("\n", $input);
 
 $twice = $thrice = 0;
 
@@ -10,5 +10,5 @@ foreach ($input as $line) {
     $thrice += isset($count[3]) ? 1 : 0;
 }
 
-var_dump($twice * $thrice);
+return $twice * $thrice;
 

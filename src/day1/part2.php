@@ -1,7 +1,5 @@
 <?php
 
-$input = file_get_contents(__DIR__.'/input.txt');
-
 $frequency = 0;
 $parts = array_filter(explode("\n", $input));
 $seen = [];
@@ -11,8 +9,7 @@ while (true) {
         $frequency += trim($part);
 
         if (isset($seen[(string) $frequency])) {
-            var_dump($frequency);
-            break 2;
+            return $frequency;
         }
 
         $seen[(string) $frequency] = true;
